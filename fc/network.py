@@ -22,11 +22,11 @@ class Network(object):
         preds = []
         for j in range(all_x.shape[0]):
             x = all_x[j]
-            pred = self.predict_one(x.reshape(-1,1))
+            pred = self.predict_one_sample(x.reshape(-1,1))
             preds.append(pred)
         return np.array(preds).reshape(-1,10)
 
-    def predict_one(self, x):
+    def predict_one_sample(self, x):
         output = x
         for layer in self.layers:
             output = layer.forward(output)
@@ -53,7 +53,7 @@ class Network(object):
         for i in range(epoch):
             for j in range(train_x.shape[0]):
                 x, y = train_x[j], train_y[j]
-                pred = self.predict_one(x.reshape(-1, 1))
+                pred = self.predict_one_sample(x.reshape(-1, 1))
                 self.train_one_sample(y.reshape(-1, 1), pred, learning_rate)
 
         print("train done")
@@ -61,21 +61,3 @@ class Network(object):
 
 if __name__ == "__main__":
     network = Network(5, [4, 3, 2], n_class=10)
-
-    x = np.random.uniform(-1, 1, (5, 1))
-    print("x:", x)
-
-    pred = network.predict(x)
-    print("predict: ", pred)
-
-    y = np.eye(10)[[1]].T
-
-    print(y)
-
-    for i in range(10):
-        network.train_one_step(y, pred, 0.1)
-
-    pred = network.predict(x)
-    print("predict: ", pred)
-
-    print(one_hot(1))

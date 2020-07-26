@@ -16,8 +16,8 @@ class Layer(object):
         self.b_grad = None
         self.input = None
 
-    def forward(self, input):
-        self.input = input
+    def forward(self, input_value):
+        self.input = input_value
         self.z = np.dot(self.w, self.input) + self.b
         self.a = self.activation(self.z)
         return self.a

@@ -18,8 +18,8 @@ if __name__ == "__main__":
     y_oh = preprocessing.OneHotEncoder().fit_transform(y.reshape(-1, 1)).toarray()
     print(y.shape)
 
-    network = Network(64, [128, 128, 128], n_class=10)
-    network.train(x[0:1000], y_oh[0:1000], 30, 0.01)
+    network = Network(64, [512, 256, 128], n_class=10)
+    network.train(x[0:1000], y_oh[0:1000], 100, 0.0001)
 
     preds = network.predict(x[1001:1500])
     y_true = y[1001:1500]
