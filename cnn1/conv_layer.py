@@ -54,14 +54,14 @@ class ConvLayer(object):
     """
 
     def forward(self, input_array):
-        #print("input_array:{}".format(input_array.shape))
+        # print("input_array:{}".format(input_array.shape))
         padded_array = self.padding_zero(input_array, self.zero_padding)
-        #print("padded_array:{}".format(repr(padded_array.shape)))
+        # print("padded_array:{}".format(repr(padded_array.shape)))
         self.input_array = padded_array
 
         stride = self.stride
         output_size = np.append(self.n_kernels, self.output_size)
-        #print("output: {}".format(repr(output_size)))
+        # print("output: {}".format(repr(output_size)))
 
         self.output_array = np.zeros(output_size)
         for p in range(self.n_kernels):
@@ -71,7 +71,6 @@ class ConvLayer(object):
                 a = padded_array[d, :, :]
                 z += correlate2d(a, w, mode="valid")[::stride, ::stride]  # todo
             z = z + self.bias[p]
-            #print("z:{}".format(repr(z)))
             self.output_array[p, :, :] = z
         return self.activator.forward(self.output_array)
 
@@ -80,7 +79,6 @@ class ConvLayer(object):
         # 确定扩展后sensitivity map的大小
         # 计算stride为1时sensitivity map的大小
         expand_size = self.input_size - self.kernel_size + 2 * self.zero_padding + 1
-        #print("expand: {}".format(expand_size))
         # 构建新的sensitivity_map
         expand_array = np.zeros(np.append(depth, expand_size))
         # 从原始sensitivity map拷贝误差值
@@ -116,11 +114,10 @@ class ConvLayer(object):
         for d in range(self.input_dim):
             for p in range(self.n_kernels):
                 self.weights_grad[d][p] = correlate2d(self.input_array[d], expand_delta[p], mode="valid")
-
-        #print("wg:{}".format(repr(self.weights_grad)))
+        # print("wg:{}".format(repr(self.weights_grad)))
 
         self.bias_grad = np.sum(np.sum(delta, axis=2), axis=1)
-        #print("bias_grad:{}".format(self.bias_grad))
+        # print("bias_grad:{}".format(self.bias_grad))
 
         return self.delta
 
@@ -133,7 +130,7 @@ def check_gradient():
     zero_padding = 1
     stride = 2
     kernel_size = np.array([2, 2])
-    n_kernels = 2
+    n_kernels = 3
 
     layer = ConvLayer(input_size, input_dim, zero_padding, stride, kernel_size, n_kernels, IdentityActivator())
 
@@ -153,7 +150,7 @@ def check_gradient():
     )
 
     layer.forward(input_array)
-    delta = np.ones((2, 3, 3), dtype=np.float64)
+    delta = np.ones((3, 3, 3), dtype=np.float64)
     delta = layer.backward(delta)
     print("delta:{}".format(repr(delta)))
 
@@ -167,15 +164,15 @@ def check_gradient():
                 err1 = error_function(output_array)
                 input_array[d, h, w] -= epsilon * 2
                 err2 = error_function(layer.forward(input_array))
-                #print("err:{} {}".format(err1, err2))
+                # print("err:{} {}".format(err1, err2))
                 expect_grad = (err1 - err2) / (2 * epsilon)
                 input_array[d, h, w] += epsilon
                 print('delta(%d,%d,%d): expected - actural %f - %f' % (
-                    d, h, w, expect_grad, delta[d, h+zero_padding, w+zero_padding]))
+                    d, h, w, expect_grad, delta[d, h + zero_padding, w + zero_padding]))
 
     # 检查 weights
     layer.forward(input_array)
-    delta = np.ones((2, 3, 3), dtype=np.float64)
+    delta = np.ones((3, 3, 3), dtype=np.float64)
     delta = layer.backward(delta)
 
     for d in range(input_dim):
@@ -189,6 +186,18 @@ def check_gradient():
                 layer.weights[d][0][u][v] += epsilon
                 print('weights(%d,%d,%d): expected - actural %f - %f' % (
                     d, u, v, expect_grad, layer.weights_grad[d][0][u][v]))
+
+    # 检查 bias
+    for p in range(n_kernels):
+        layer.bias[p] += epsilon
+        err1 = error_function(layer.forward(input_array))
+        layer.bias[p] -= epsilon * 2
+        err2 = error_function(layer.forward(input_array))
+        expect_grad = (err1 - err2) / (2 * epsilon)
+        layer.bias[p] += epsilon
+        print('bias(%d): expected - actural %f - %f' % (
+            p, expect_grad, layer.bias_grad[p]))
+
 
 def test_np():
     input_size = np.array([5, 6])
