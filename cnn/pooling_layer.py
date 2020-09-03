@@ -22,10 +22,8 @@ def pool2d(A, kernel_size, stride, padding=0, pool_mode='max'):
                     (A.shape[1] - kernel_size) // stride + 1)
     kernel_size = (kernel_size, kernel_size)
     A_w = as_strided(A, shape=output_shape + kernel_size,
-                     strides=(stride * A.strides[0],
-                              stride * A.strides[1]) + A.strides)
+                     strides=(stride * A.strides[0], stride * A.strides[1]) + A.strides)
     A_w = A_w.reshape(-1, *kernel_size)
-
     # Return the result of pooling
     if pool_mode == 'max':
         return A_w.max(axis=(1, 2)).reshape(output_shape)
@@ -54,51 +52,51 @@ class PoolingLayer(object):
         return self.output_array
 
     def backward(self, delta):
-        delta1 = np.zeros(np.append(self.input_dim, self.input_size))
+        self.delta = np.zeros(np.append(self.input_dim, self.input_size))
         stride = self.stride
 
+        stride_shape = np.append(self.output_size, (self.kernel_size, self.kernel_size))
         for d in range(self.input_dim):
             input_strides = self.input_array[d].strides
-            stride_array = as_strided(self.input_array[d],
-                                      shape=np.append(self.output_size, (self.kernel_size, self.kernel_size)),
+            stride_array = as_strided(self.input_array[d], shape=stride_shape,  # todo
                                       strides=(stride * input_strides[0], stride * input_strides[1]) + input_strides)
-            print("stride_array:{}".format(stride_array))
             for i in range(self.output_size[0]):
                 for j in range(self.output_size[1]):
                     if self.mode == 'avg':
-                        delta1[d,
-                        (i * stride):(i * stride + stride),
-                        (j * stride):(j * stride + stride)] = delta[d, i, j] / (self.kernel_size * self.kernel_size)
+                        self.delta[d, (i * stride):(i + 1) * stride, (j * stride):(j + 1) * stride] = \
+                            delta[d, i, j] / (self.kernel_size * self.kernel_size)
                     elif self.mode == 'max':
-                        patch_array = stride_array[i, j, :, :]
-                        print("stride:{}, argmax:{}".format(patch_array, patch_array.argmax()))
-                        k, l = np.unravel_index(patch_array.argmax(), patch_array.shape)
-                        print("k:{},l:{}, max:{}".format(k, l, patch_array[k, l]))
-                        delta1[d, i * stride + k, j * stride + l] = delta[d, i, j]
+                        patched = stride_array[i, j, :, :]
+                        k, l = np.unravel_index(patched.argmax(), patched.shape)
+                        self.delta[d, i * stride + k, j * stride + l] = delta[d, i, j]
+        return self.delta
 
-        self.delta = delta1
-        return delta1
+    def update(self, learning_rate):
+        pass
 
 
 if __name__ == "__main__":
-    input_size = np.array([4, 4])
-    input_dim = 1
+    input_size = np.array([14, 14])
+    input_dim = 2
     stride = 2
     kernel_size = 2
-    layer = PoolingLayer(input_size, input_dim, kernel_size, stride, mode='avg')
+    layer = PoolingLayer(input_size, input_dim, kernel_size, stride, mode='max')
 
-    input_array = np.array([[1, 1, 2, 4],
-                            [5, 6, 7, 8],
-                            [3, 2, 1, 0],
-                            [1, 2, 3, 4]], dtype=np.float).reshape((1, 4, 4))
+    # input_array = np.array(
+    #     [[1, 1, 2, 4],
+    #      [5, 6, 7, 8],
+    #      [3, 2, 1, 0],
+    #      [1, 2, 3, 4]], dtype=np.float).reshape((1, 4, 4))
 
-    print("input:{}".format(input_array))
+    input_array = np.arange(2 * 14 * 14).reshape((2, 14, 14))
+
+    # print("input:{}".format(input_array))
 
     output_array = layer.forward(input_array)
 
     print("output:{}".format(output_array))
 
-    delta = np.ones((1, 2, 2))
+    delta = np.ones((2, 7, 7))
 
     delta1 = layer.backward(delta)
     print("delta1:{}".format(delta1))
