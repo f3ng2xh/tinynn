@@ -27,7 +27,7 @@ class ConvLayer(object):
 
         self.delta = np.zeros(np.append(self.input_dim, self.input_size + 2 * self.zero_padding))
 
-        self.weights = np.random.uniform(1, 2, np.append((input_dim, n_kernels), kernel_size))
+        self.weights = np.random.uniform(-0.001, 0.001, np.append((input_dim, n_kernels), kernel_size))
         self.weights_grad = np.zeros(np.append((input_dim, n_kernels), kernel_size))
         self.bias = np.zeros(n_kernels)
         self.bias_grad = None

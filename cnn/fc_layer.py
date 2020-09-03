@@ -6,7 +6,7 @@ class FcLayer(object):
     def __init__(self, input_size, output_size, activator):
         self.input_size = input_size
         self.output_size = output_size
-        self.weights = np.random.uniform(-0.1, 0.1, (output_size, input_size))
+        self.weights = np.random.uniform(-0.001, 0.001, (output_size, input_size))
         self.bias = np.zeros((output_size, 1))
         self.activator = activator
 
@@ -19,7 +19,7 @@ class FcLayer(object):
 
     def forward(self, input_array):
         self.input_array = input_array
-        self.output_array = np.dot(self.weights, self.input_array) * self.bias
+        self.output_array = np.dot(self.weights, self.input_array) + self.bias
         return self.activator.forward(self.output_array)
 
     def backward(self, delta):

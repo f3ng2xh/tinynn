@@ -70,12 +70,9 @@ class CnnNetwork(object):
 
     def predict_one_sample(self, x):
         output = x
-        print("input:{}".format(x.shape))
         for layer in self.layers:
             output = layer.forward(output)
-            print("layer:{}".format(output.shape))
         output = self.output_layer.forward(output)
-        print("output:{}".format(output.shape))
 
         return output
 
@@ -84,11 +81,8 @@ class CnnNetwork(object):
         self.output_layer.delta = delta
         delta = self.output_layer.backward(delta)
 
-        print("output delta:{}".format(delta.shape))
-
         for layer in reversed(self.layers):
             delta = layer.backward(delta)
-            print("layer delta:{}".format(delta.shape))
 
         self.output_layer.update(learning_rate)
         for layer in self.layers:
@@ -98,14 +92,16 @@ class CnnNetwork(object):
 if __name__ == "__main__":
     network = CnnNetwork(input_size=np.array([28, 28]), n_class=10)
     input_array = np.random.uniform(0, 1, (1, 28, 28))
+    print("input:{}".format(input_array.shape))
 
     pred = network.predict_one_sample(input_array)
-    print(pred)
+    print("pred:{}".format(pred))
 
     print("------ train ---------")
     y = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape([10, 1])
-    network.train_one_sample(y, pred, 0.01)
+    for i in range(10):
+        network.train_one_sample(y, pred, 1)
     print("------ train ---------")
 
     pred = network.predict_one_sample(input_array)
-    print(pred)
+    print("pred:{}".format(pred))
