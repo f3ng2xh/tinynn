@@ -36,9 +36,3 @@ class Layer(object):
     def update(self, alpha):
         self.w = self.w + alpha * self.w_grad
         self.b = self.b + alpha * self.b_grad
-
-    # def __getattr__(self, name):
-    #     if hasattr(self.__data, name):
-    #         return getattr(self.__data, name)
-    #     else:
-    #         raise Exception("hasn't attr [{}]".format(name))
