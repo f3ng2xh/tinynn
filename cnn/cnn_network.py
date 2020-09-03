@@ -11,6 +11,7 @@ from activator import ReluActivator, SoftmaxActivator
 
 class CnnNetwork(object):
     def __init__(self, input_size, n_class=1):
+        # input (1,28,28)
         conv1 = ConvLayer(
             input_size=input_size,
             input_dim=1,
@@ -20,6 +21,7 @@ class CnnNetwork(object):
             n_kernels=32,
             activator=ReluActivator())
 
+        # output (32,28,28)
         self.conv1 = conv1
 
         pool1 = PoolingLayer(
@@ -29,6 +31,7 @@ class CnnNetwork(object):
             stride=2,
             mode='max')
 
+        # output (32,14,14)
         self.pool1 = pool1
 
         conv2 = ConvLayer(
@@ -39,6 +42,8 @@ class CnnNetwork(object):
             kernel_size=np.array([5, 5]),
             n_kernels=64,
             activator=ReluActivator())
+
+        # output (64,14,14)
         self.conv2 = conv2
 
         pool2 = PoolingLayer(
@@ -47,23 +52,31 @@ class CnnNetwork(object):
             kernel_size=2,
             stride=2,
             mode='max')
+
+        # output (64,7,7)
         self.pool2 = pool2
 
         stack = StackingLayer(
             input_size=pool2.output_size,
             input_dim=pool2.input_dim)
+
+        # output(64*7*7,1)
         self.stack = stack
 
         fc1 = FcLayer(
             input_size=stack.output_size,
             output_size=1024,
             activator=ReluActivator())
+
+        # output (1024,1)
         self.fc1 = fc1
 
         fc2 = FcLayer(
             input_size=fc1.output_size,
             output_size=n_class,
             activator=SoftmaxActivator())
+
+        # output (10,1)
         self.fc2 = fc2
         self.layers = [conv1, pool1, conv2, pool2, stack, fc1]
         self.output_layer = fc2
@@ -78,7 +91,6 @@ class CnnNetwork(object):
 
     def train_one_sample(self, y, pred, learning_rate):
         delta = y - pred
-        self.output_layer.delta = delta
         delta = self.output_layer.backward(delta)
 
         for layer in reversed(self.layers):
@@ -100,7 +112,7 @@ if __name__ == "__main__":
     print("------ train ---------")
     y = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape([10, 1])
     for i in range(10):
-        network.train_one_sample(y, pred, 1)
+        network.train_one_sample(y, pred, 0.01)
     print("------ train ---------")
 
     pred = network.predict_one_sample(input_array)

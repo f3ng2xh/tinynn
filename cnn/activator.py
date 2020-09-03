@@ -10,20 +10,12 @@ class IdentityActivator(object):
         return 1
 
 
-class SigmoidActivator(object):
-    def forward(self, x):
-        return 1.0 / (1.0 + np.exp(-x))
-
-    def backward(self, x):
-        return 1 * (x > 0)
-
-
 class ReluActivator(object):
     def forward(self, x):
         return (np.abs(x) + x) / 2
 
-    def backward(self, x):
-        return 1 * (x > 0)
+    def backward(self, y):
+        return 1 * (y > 0)
 
 
 class SoftmaxActivator(object):
@@ -32,5 +24,20 @@ class SoftmaxActivator(object):
         d = np.dot(np.ones((1, n.shape[0])), n)
         return n / d
 
-    def backward(self, x):
-        return 1 * (x > 0)
+    def backward(self, y):  # todo
+        return 1 * (y > 0)
+
+
+if __name__ == "__main__":
+    ac = ReluActivator()
+
+    x = np.arange(-1, 9).reshape((10, 1))
+    print("X:{}".format(x))
+
+    y = ac.forward(x)
+    print("y:{}".format(y))
+
+    delta = ac.backward(y)
+    print("delta:{}".format(delta))
+
+    print("y>0:{}".format(1 * (y > 0)))

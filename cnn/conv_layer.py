@@ -25,7 +25,7 @@ class ConvLayer(object):
         print("input_size: {}, input_dim:{}, zero_padding: {}, stride: {}, output_size: {}".format(
             repr(input_size), input_dim, zero_padding, stride, repr(self.output_size)))
 
-        self.delta = np.zeros(np.append(self.input_dim, self.input_size + 2 * self.zero_padding))
+        self.delta = np.zeros(np.append(self.input_dim, self.input_size))
 
         self.weights = np.random.uniform(-0.001, 0.001, np.append((input_dim, n_kernels), kernel_size))
         self.weights_grad = np.zeros(np.append((input_dim, n_kernels), kernel_size))
@@ -36,28 +36,17 @@ class ConvLayer(object):
         self.output_array = None
         self.input_array = None
 
-    def padding_zero(self, input_array, zp):
-        if input_array.ndim == 3:
-            d, h, w = input_array.shape
-            padded_array = np.zeros((d, h + 2 * zp, w + 2 * zp))
-            padded_array[:, zp: zp + h, zp: zp + w] = input_array
-            return padded_array
-        elif input_array.ndim == 2:
-            h, w = input_array.shape
-            padded_array = np.zeros((h + 2 * zp, w + 2 * zp))
-            padded_array[zp: zp + h, zp: zp + w] = input_array
-            return padded_array
-        raise Exception("wrong padding dim")
-
     """
     z_p^{l+1} = \sum_d w_{d,p}^{l+1} cov a_d^{l} + b_p
     """
 
     def forward(self, input_array):
         # print("input_array:{}".format(input_array.shape))
-        padded_array = self.padding_zero(input_array, self.zero_padding)
+        # padded_array = self.padding_zero(input_array, self.zero_padding)
+        zp = self.zero_padding
+        padded_array = np.pad(input_array, ((0, 0), (zp, zp), (zp, zp)), 'constant', constant_values=0.0)
         # print("padded_array:{}".format(repr(padded_array.shape)))
-        self.input_array = padded_array
+        self.input_array = input_array
 
         stride = self.stride
         output_size = np.append(self.n_kernels, self.output_size)
@@ -93,7 +82,6 @@ class ConvLayer(object):
     dl/dw_{d,p}^{l}=dl/dz_p^{l} cov a_d^{l-1}
     dl/dz_d^{l}=da_d^{l}/dz_d^{l} dot dl/da_d^{l}
     dl/da_d^{l}=\sum_p rot(w_{d,p}^{l+1}) conv dl/dz^{l+1}
-    delta.shape=(2,3,3)
     """
 
     def backward(self, delta):
@@ -101,23 +89,26 @@ class ConvLayer(object):
         expand_delta = self.expand_delta(delta)
 
         # 宽卷积
-        padded_delta = self.padding_zero(expand_delta, self.kernel_size[0] - 1)
+        full_zp = self.kernel_size[0] - 1
+        padded_delta = np.pad(expand_delta, ((0, 0), (full_zp, full_zp), (full_zp, full_zp)), 'constant',
+                              constant_values=0.0)
+        # padded_delta = self.padding_zero(expand_delta, self.kernel_size[0] - 1)
+        zp = self.zero_padding
+        input_size = self.input_size
 
         for d in range(self.input_dim):
-            delta1 = np.zeros(self.input_size + 2 * self.zero_padding)
-            a = self.input_array[d, :, :]  # pad 之后的输入
+            delta1 = np.zeros(self.input_size + 2 * zp)
+            a = self.input_array[d, :, :]
             for p in range(self.n_kernels):
                 w = self.weights[d, p, :, :]
                 delta1 += convolve2d(padded_delta[p], w, mode="valid")  # 真正宽卷积运算
-            self.delta[d] = self.activator.backward(a) * delta1
+            self.delta[d] = self.activator.backward(a) * delta1[zp:zp + input_size[0], zp:zp + input_size[1]]
 
         for d in range(self.input_dim):
             for p in range(self.n_kernels):
                 self.weights_grad[d][p] = correlate2d(self.input_array[d], expand_delta[p], mode="valid")
-        # print("wg:{}".format(repr(self.weights_grad)))
 
         self.bias_grad = np.sum(np.sum(delta, axis=2), axis=1)
-        # print("bias_grad:{}".format(self.bias_grad))
 
         return self.delta
 
@@ -172,7 +163,7 @@ def check_gradient():
                 expect_grad = (err1 - err2) / (2 * epsilon)
                 input_array[d, h, w] += epsilon
                 print('delta(%d,%d,%d): expected - actural %f - %f' % (
-                    d, h, w, expect_grad, delta[d, h + zero_padding, w + zero_padding]))
+                    d, h, w, expect_grad, delta[d, h, w]))
 
     # 检查 weights
     layer.forward(input_array)
