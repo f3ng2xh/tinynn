@@ -21,8 +21,7 @@ if __name__ == "__main__":
     network = CnnNetwork(input_size=np.array([28, 28]), n_class=10)
     learning_rate = 0.1
     print("begin train ...")
-    i=0
-    for j in range(100):
+    for i in range(1000):
         xs = x[i].reshape((1, 28, 28))
         ys = y_onehot[i].reshape((10, 1))
         # print("ys:{}".format(ys))
