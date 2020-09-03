@@ -1,28 +1,40 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+import numpy as np
 from sklearn.datasets import fetch_openml
 from sklearn.datasets import load_digits
 from sklearn.utils import check_random_state
 from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
-from network import *
+from cnn_network import CnnNetwork
 from sklearn.metrics import accuracy_score
 
 if __name__ == "__main__":
-    #x, y = load_digits(return_X_y=True)
+    # x, y = load_digits(return_X_y=True)
     x, y = fetch_openml('mnist_784', version=1, return_X_y=True)
     print(x.shape)
-    # print(y[0])
 
-    y_oh = preprocessing.OneHotEncoder().fit_transform(y.reshape(-1, 1)).toarray()
+    y_onehot = preprocessing.OneHotEncoder().fit_transform(y.reshape(-1, 1)).toarray()
     print(y.shape)
 
-    network = Network(64, [512, 256, 128], n_class=10)
-    network.train(x[0:1000], y_oh[0:1000], 100, 0.0001)
+    network = CnnNetwork(input_size=np.array([28, 28]), n_class=10)
+    learning_rate = 0.1
+    print("begin train ...")
+    i=0
+    for j in range(100):
+        xs = x[i].reshape((1, 28, 28))
+        ys = y_onehot[i].reshape((10, 1))
+        # print("ys:{}".format(ys))
+        # print("y:{}".format(y[i]))
+        pred = network.predict_one_sample(xs)
+        network.train_one_sample(ys, pred, learning_rate)
+    print("end train ...")
 
-    preds = network.predict(x[1001:1500])
-    y_true = y[1001:1500]
-    y_pred = np.argmax(preds, axis=1)
+    for j in range(1):
+        preds = network.predict_one_sample(x[j].reshape((1, 28, 28)))
+        y_true = y[j]
+        y_pred = np.argmax(preds, axis=0)
+        print("label:{}, pred:{}".format(y_true, np.squeeze(y_pred)))
 
-    print(accuracy_score(y_true, y_pred))
+    # print(accuracy_score(y_true, y_pred))

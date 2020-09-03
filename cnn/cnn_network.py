@@ -112,8 +112,8 @@ if __name__ == "__main__":
     print("------ train ---------")
     y = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape([10, 1])
     for i in range(10):
-        network.train_one_sample(y, pred, 0.01)
+        network.train_one_sample(y, pred, 0.1)
     print("------ train ---------")
 
     pred = network.predict_one_sample(input_array)
-    print("pred:{}".format(pred))
+    print("pred:{}".format(np.argmax(pred)))
