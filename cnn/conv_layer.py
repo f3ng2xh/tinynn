@@ -22,8 +22,8 @@ class ConvLayer(object):
         self.n_kernels = n_kernels
 
         self.output_size = ((input_size - kernel_size + 2 * zero_padding) / stride + 1).astype(int)
-        print("input_size: {}, input_dim:{}, zero_padding: {}, stride: {}, output_size: {}".format(
-            repr(input_size), input_dim, zero_padding, stride, repr(self.output_size)))
+        #print("input_size: {}, input_dim:{}, zero_padding: {}, stride: {}, output_size: {}".format(
+        #    repr(input_size), input_dim, zero_padding, stride, repr(self.output_size)))
 
         self.delta = np.zeros(np.append(self.input_dim, self.input_size))
 

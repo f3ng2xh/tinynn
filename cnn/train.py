@@ -7,32 +7,47 @@ from sklearn.datasets import load_digits
 from sklearn.utils import check_random_state
 from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
-from cnn_network import CnnNetwork
+#from cnn_network import CnnNetwork
+from cnn_network_lite import CnnNetwork
 from sklearn.metrics import accuracy_score
 
 if __name__ == "__main__":
-    # x, y = load_digits(return_X_y=True)
-    x, y = fetch_openml('mnist_784', version=1, return_X_y=True)
+    x, y = load_digits(return_X_y=True)
+    #x, y = fetch_openml('mnist_784', version=1, return_X_y=True)
     print(x.shape)
 
     y_onehot = preprocessing.OneHotEncoder().fit_transform(y.reshape(-1, 1)).toarray()
     print(y.shape)
 
-    network = CnnNetwork(input_size=np.array([28, 28]), n_class=10)
-    learning_rate = 0.1
+    train_x = x[0:1000]
+    train_y = y_onehot[0:1000]
+
+    test_x = x[1000:1010]
+    test_y = y_onehot[1000:1010]
+
+    network = CnnNetwork(input_size=np.array([8, 8]), n_class=10)
+    learning_rate = 0.001
     print("begin train ...")
-    for i in range(1000):
-        xs = x[i].reshape((1, 28, 28))
-        ys = y_onehot[i].reshape((10, 1))
-        # print("ys:{}".format(ys))
-        # print("y:{}".format(y[i]))
-        pred = network.predict_one_sample(xs)
-        network.train_one_sample(ys, pred, learning_rate)
+
+    i = 0
+    for epoch in range(10):
+        for j in range(1000):
+            xs = train_x[j].reshape((1, 8, 8))
+            ys = train_y[j].reshape((10, 1))
+            pred = network.predict_one_sample(xs)
+            network.train_one_sample(ys, pred, learning_rate)
+
+        preds = network.predict_one_sample(x[0].reshape((1, 8, 8)))
+        print("preds0:{}".format(preds))
+        preds = network.predict_one_sample(x[1].reshape((1, 8, 8)))
+        print("preds1:{}".format(preds))
+
     print("end train ...")
 
-    for j in range(1):
-        preds = network.predict_one_sample(x[j].reshape((1, 28, 28)))
-        y_true = y[j]
+    for i in range(2):
+        preds = network.predict_one_sample(x[i].reshape((1, 8, 8)))
+        print("preds:{}".format(preds))
+        y_true = y[i]
         y_pred = np.argmax(preds, axis=0)
         print("label:{}, pred:{}".format(y_true, np.squeeze(y_pred)))
 
