@@ -100,20 +100,33 @@ class CnnNetwork(object):
         for layer in self.layers:
             layer.update(learning_rate)
 
+    def loss(self, y_label, y_pred):
+        ls = y_label * (-np.log(y_pred))
+        return np.sum(ls)
+
 
 if __name__ == "__main__":
     network = CnnNetwork(input_size=np.array([28, 28]), n_class=10)
-    input_array = np.random.uniform(0, 1, (1, 28, 28))
+    input_array = np.random.uniform(0, 1, (2, 1, 28, 28))
     print("input:{}".format(input_array.shape))
-
-    pred = network.predict_one_sample(input_array)
+    pred = network.predict_one_sample(input_array[0])
     print("pred:{}".format(pred))
 
     print("------ train ---------")
-    y = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape([10, 1])
-    for i in range(10):
-        network.train_one_sample(y, pred, 0.1)
+    y = np.array(
+        [[0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]]).reshape([2, 10, 1])
+    for i in range(5000):
+        pred = network.predict_one_sample(input_array[0])
+        network.train_one_sample(y[0], pred, 0.01)
+        ls1 = network.loss(y[0], pred)
+        pred = network.predict_one_sample(input_array[1])
+        network.train_one_sample(y[1], pred, 0.01)
+        ls2 = network.loss(y[1], pred)
+        print("{} - loss1:{}".format(i, (ls1 + ls2) / 2))
     print("------ train ---------")
 
-    pred = network.predict_one_sample(input_array)
-    print("pred:{}".format(pred))
+    pred = network.predict_one_sample(input_array[0])
+    print("pred0:{}".format(pred))
+    pred = network.predict_one_sample(input_array[1])
+    print("pred1:{}".format(pred))

@@ -19,29 +19,19 @@ if __name__ == "__main__":
     y_onehot = preprocessing.OneHotEncoder().fit_transform(y.reshape(-1, 1)).toarray()
     print(y.shape)
 
-    train_x = x[0:1000]
-    train_y = y_onehot[0:1000]
-
-    test_x = x[1000:1010]
-    test_y = y_onehot[1000:1010]
+    train_x = x[0:1700]
+    train_y = y_onehot[0:1700]
 
     network = CnnNetwork(input_size=np.array([8, 8]), n_class=10)
-    learning_rate = 0.001
-    print("begin train ...")
+    learning_rate = 0.005
 
-    i = 0
-    for epoch in range(10):
-        for j in range(1000):
-            xs = train_x[j].reshape((1, 8, 8))
-            ys = train_y[j].reshape((10, 1))
+    print("begin train ...")
+    for epoch in range(4000):
+        for i in range(2):
+            xs = train_x[i].reshape((1, 8, 8))
+            ys = train_y[i].reshape((10, 1))
             pred = network.predict_one_sample(xs)
             network.train_one_sample(ys, pred, learning_rate)
-
-        preds = network.predict_one_sample(x[0].reshape((1, 8, 8)))
-        print("preds0:{}".format(preds))
-        preds = network.predict_one_sample(x[1].reshape((1, 8, 8)))
-        print("preds1:{}".format(preds))
-
     print("end train ...")
 
     for i in range(2):

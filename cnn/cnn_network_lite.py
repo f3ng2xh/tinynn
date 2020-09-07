@@ -96,10 +96,10 @@ if __name__ == "__main__":
          [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]]).reshape([2, 10, 1])
     for i in range(10000):
         pred = network.predict_one_sample(input_array[0])
-        network.train_one_sample(y[0], pred, 0.001)
+        network.train_one_sample(y[0], pred, 0.01)
         ls1 = network.loss(y[0], pred)
         pred = network.predict_one_sample(input_array[1])
-        network.train_one_sample(y[1], pred, 0.001)
+        network.train_one_sample(y[1], pred, 0.01)
         ls2 = network.loss(y[1], pred)
         print("{} - loss1:{}".format(i, (ls1 + ls2) / 2))
     print("------ train ---------")
