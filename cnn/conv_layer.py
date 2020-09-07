@@ -22,12 +22,12 @@ class ConvLayer(object):
         self.n_kernels = n_kernels
 
         self.output_size = ((input_size - kernel_size + 2 * zero_padding) / stride + 1).astype(int)
-        print("input_size: {}, input_dim:{}, zero_padding: {}, stride: {}, output_size: {}".format(
-            repr(input_size), input_dim, zero_padding, stride, repr(self.output_size)))
+        #print("input_size: {}, input_dim:{}, zero_padding: {}, stride: {}, output_size: {}".format(
+        #    repr(input_size), input_dim, zero_padding, stride, repr(self.output_size)))
 
         self.delta = np.zeros(np.append(self.input_dim, self.input_size))
 
-        self.weights = np.random.uniform(-0.001, 0.001, np.append((input_dim, n_kernels), kernel_size))
+        self.weights = np.random.uniform(-0.01, 0.01, np.append((input_dim, n_kernels), kernel_size))
         self.weights_grad = np.zeros(np.append((input_dim, n_kernels), kernel_size))
         self.bias = np.zeros(n_kernels)
         self.bias_grad = None

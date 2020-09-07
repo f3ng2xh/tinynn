@@ -12,7 +12,7 @@ class IdentityActivator(object):
 
 class ReluActivator(object):
     def forward(self, x):
-        return (np.abs(x) + x) / 2
+        return x * (x > 0)
 
     def backward(self, y):
         return 1 * (y > 0)

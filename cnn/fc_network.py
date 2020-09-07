@@ -1,8 +1,7 @@
 # -*- coding: UTF-8 -*-
 import numpy as np
-
-from layer import Layer
-from activation import *
+from activator import IdentityActivator, ReluActivator, SoftmaxActivator
+from fc_layer import FcLayer
 
 
 class Network(object):
@@ -10,13 +9,10 @@ class Network(object):
         self.layers = []
         self.input_size = input_size
         for siz in hidden_units:
-            hidden_layer = Layer(input_size, siz, activation=relu, derivation=relu_derivation)
+            hidden_layer = FcLayer(input_size, siz, activator=ReluActivator())
             self.layers.append(hidden_layer)
             input_size = siz
-        if n_class == 1:
-            self.output_layer = Layer(input_size, 1, activation=sigmoid, derivation=None)
-        else:
-            self.output_layer = Layer(input_size, n_class, activation=softmax, derivation=None)
+        self.output_layer = FcLayer(input_size, n_class, SoftmaxActivator())
 
     def predict(self, all_x):
         preds = []
@@ -37,12 +33,10 @@ class Network(object):
     def train_one_sample(self, y, pred, learning_rate):
         # 交叉熵损失函数
         delta = y - pred
-        self.output_layer.backward(None, delta)
+        delta = self.output_layer.backward(delta)
 
-        w = self.output_layer.w
         for layer in reversed(self.layers):
-            delta = layer.backward(w, delta)
-            w = layer.w
+            delta = layer.backward(delta)
 
         self.output_layer.update(learning_rate)
         for layer in self.layers:
